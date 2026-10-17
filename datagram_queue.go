@@ -11,7 +11,7 @@ import (
 
 const (
 	maxDatagramSendQueueLen = 32
-	maxDatagramRcvQueueLen  = 128
+	maxDatagramRcvQueueLen  = 1024
 )
 
 type datagramQueue struct {
