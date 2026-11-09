@@ -727,7 +727,19 @@ func (p *packetPacker) composeNextPacket(
 	var pl payload
 	if ackAllowed {
 		if ack := p.acks.GetAckFrame(protocol.Encryption1RTT, now, !hasRetransmission && !hasData); ack != nil {
-			ack.Truncate(maxPayloadSize, v)
+			ackBudget := maxPayloadSize
+			if p.datagramQueue != nil {
+				if frame := p.datagramQueue.Peek(); frame != nil && len(ack.AckRanges) > 0 {
+					remaining := maxPayloadSize - frame.Length(v)
+					minimum := *ack
+					minimum.AckRanges = ack.AckRanges[:1]
+					// Preserve the queued datagram when a valid truncated ACK can coexist with it.
+					if remaining >= minimum.Length(v) {
+						ackBudget = remaining
+					}
+				}
+			}
+			ack.Truncate(ackBudget, v)
 			pl.ack = ack
 			pl.length += ack.Length(v)
 		}
