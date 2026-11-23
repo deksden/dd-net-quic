@@ -115,7 +115,11 @@ func (h *datagramQueue) Receive(ctx context.Context) ([]byte, error) {
 		h.rcvMx.Lock()
 		if len(h.rcvQueue) > 0 {
 			data := h.rcvQueue[0]
+			h.rcvQueue[0] = nil
 			h.rcvQueue = h.rcvQueue[1:]
+			if len(h.rcvQueue) == 0 {
+				h.rcvQueue = h.rcvQueue[:0]
+			}
 			h.rcvMx.Unlock()
 			return data, nil
 		}
